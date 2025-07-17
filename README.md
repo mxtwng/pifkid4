@@ -27,9 +27,8 @@ Chức năng:
 
 => báo cáo dữ liệu
 
-=============================================
 Chia việc:
-
+=============================================
 1. AI + Python DEV: Mxtwng 
 Email: hoanmytang@gmail.com
 SDT: 098718240
