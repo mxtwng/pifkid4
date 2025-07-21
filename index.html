@@ -54,7 +54,7 @@
   set(statusRef, "closed");
    // Thời gian hiện tại
   const now = new Date();
-  const timeKey = now.toLocaleTimeString('vi-VN').replace(",","_").replace(":","-");
+  const timeKey = now.toLocaleTimeString('vi-VN').replace(",","_");
   // Hiển thị thời gian + log khóa tủ
   document.getElementById("firebase").innerText = "locked at " + timeKey;  
   set(ref(db,"logs/"+timeKey),"admin locked")
