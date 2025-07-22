@@ -35,15 +35,18 @@ void loop() {
   lcd.print(" lx");
 
 
-  if ((luxInt <= 300) || (luxInt <=750)) {
-    lcd.setCursor(0, 0);
-    lcd.print("Do sang cua ban     ");
+  if (luxInt <= 300) {
+
     lcd.setCursor(0, 1);
-    lcd.print("khong du sang       ");
+    lcd.print("khong du sang");
   }
+  if (luxInt >= 750) {
 
-
+    lcd.setCursor(0,1);
+    lcd.print("qua sang");
+}
   if ((digitalRead(button_skip) == LOW) || (luxInt >= 300 && luxInt <= 500)) {
+   
     clearLCDLine(1);
   }
 
