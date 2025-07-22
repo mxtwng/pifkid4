@@ -40,7 +40,7 @@ void loop() {
     lcd.setCursor(0, 1);
     lcd.print("khong du sang");
   }
-  if (luxInt >= 750) {
+  if (luxInt >= 500) {
 
     lcd.setCursor(0,1);
     lcd.print("qua sang");
