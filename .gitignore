@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.dll
+*.dylib
+
+# Virtual environment
+venv/
+.venv/
+env/
+ENV/
+lib/
+lib64/
+pyvenv.cfg
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# VSCode
+.vscode/
+
+# Arduino/ESP
+*.ino.*
+*.hex
+*.elf
+*.bin
+*.map
