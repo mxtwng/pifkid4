@@ -1,82 +1,176 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Điều khiển tủ thông minh</title>
+    <title>Control Smart Drawer</title>
   </head>
   <body>
-    <h2>Web điều khiển khóa tủ </h2>
-    <button id="buttonMo">Mở tủ</button>
-    <button id="buttonDong">Đóng tủ</button>
-    <p>Trạng thái: <span id="status">?</span></p>
-    
-    <p id="firebase">Thời gian mở:</p>
-    <p id="unlock">Trạng thái tủ:</p>
+    <h2>Smart Drawer Control Panel</h2>
+    <button id="openbutton">OPEN</button>
+    <button id="closebutton">CLOSE</button>
+    <p>Status: <span id="status"> </span></p>
+    <p id="firebase">Unlocked at:</p>
+
+
+    <h3>Log In</h3>
+    <input type="email" id ="email" placeholder="email"/>
+    <input type="password" id="password" placeholder="password"/>
+    <button id="login">Log in</button>
+    <p id="userStatus">userStatus: </p>
+    <p id="Notification">Notification: </p>
+    <button id="logout">LOG OUT</button>
     <script type="module">
     // Nhúng thư viện
-      import{initializeApp} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-      import{getDatabase, ref, onValue, set} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-    // Cấu hình Firebase 
+    import{initializeApp} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import{getDatabase, ref, onValue, set} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import{getAuth, signInWithEmailAndPassword, onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import{signOut} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+   // Cấu hình Firebase
     const firebaseConfig={
     apiKey: "AIzaSyCvWK6y7VSmoasdZVLW4Wp_pd4BUr1XrvI",
     authDomain: "smart-drawer-lock-fdfa1.firebaseapp.com",
     databaseURL: "https://smart-drawer-lock-fdfa1-default-rtdb.asia-southeast1.firebasedatabase.app",
     projectId: "smart-drawer-lock-fdfa1",
-    storageBucket: "smart-drawer-lock-fdfa1.firebasestorage.app",
+    storageBucket: "smart-drawer-lock-fdfa1.appspot.com",
     messagingSenderId: "222409111517",
     appId: "1:222409111517:web:902b713f4b7cb2b722e834"
   };
-  // Khởi tạo app Firebase và database
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
+// Khởi tạo Database & Auth
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const auth=getAuth(app);
+    let currentUser=null;
+           
   // Trỏ đến đường dẫn dữ liệu tủ
   const statusRef = ref(db,"locker/status");
   // Theo dõi trạng thái realtime
   onValue(statusRef, (snapshot) => {
     document.getElementById("status").innerText=snapshot.val();
   });
+  // Theo dõi đăng nhập
+    onAuthStateChanged(auth, (user)=>{
+    if(user){
+    currentUser=user;
+    document.getElementById("userStatus").innerText="Logged in: " + user.email;
+  // Hiện nút khi đã đăng nhập
+    document.getElementById("openbutton").style.display="inline-block";
+    document.getElementById("closebutton").style.display="inline-block";
+    document.getElementById("logout").style.display="inline-block";    
+    }else{
+        currentUser=null;
+        document.getElementById("userStatus").innerText="You are not logged in."
+  // Ẩn nút khi chưa đăng nhập
+    document.getElementById("openbutton").style.display="none";
+    document.getElementById("closebutton").style.display="none";
+    document.getElementById("logout").style.display="none";
+    }
+});
+document.getElementById("logout").onclick=function(){
+    signOut(auth)
+    .then(()=>{
+        alert("Logged out successfully")
+    })
+    .catch((error)=>{
+        alert("Logout failed: " + error.message);
+    });
+  };
+    //Hiển thị sau đăng nhập
+document.getElementById("login").onclick=()=>{
+    const email=document.getElementById("email").value;
+    const password=document.getElementById("password").value;
+    signInWithEmailAndPassword(auth, email, password)
+    .then((userCredential)=>{
+        const user=userCredential.user;
+        currentUser=user;
+        document.getElementById("userStatus").innerText="Login successful: " + user.email;
+        document.getElementById("Notification").innerText = "You are logged in!";
+        document.getElementById("Notification").style.color = "green";    
+    })
+    .catch((error)=>{
+        document.getElementById("userStatus").innerText="Login failed: " + error.message;
+        document.getElementById("Notification").innerText = error.message;
+        document.getElementById("Notification").style.color = "red";    
+    });
+};
   // Gán nút "Mở tủ"
-  document.getElementById("buttonMo").onclick= moTu
-  function moTu (){
-  set(statusRef, "open");
+  function OPEN (){
+    if (!currentUser) {
+  alert("Please log in to continue!");
+  return;
+}
+  set(statusRef, "opened");
+  set(ref(db, "unlock"),true);
+
+
   // Thời gian hiện tại
   const now = new Date();
   const timeKey = now.toLocaleTimeString('vi-VN').replace(",","_");
   // Hiển thị thời gian
-  document.getElementById("firebase").innerText = "unlocked at " + timeKey;  
+  document.getElementById("firebase").innerText = "Unlocked at " + timeKey;  
   // Ghi log thao tác mở
-  set(ref(db,"logs/"+timeKey),"admin unlocked")
-  //Xử lý lỗi khi ghi log
-  .then(() => console.log("Ghi log thành công"))
-  .catch((error) => console.error("Lỗi khi ghi log:", error));}
+set(ref(db, "logs"), {
+  user: currentUser.email,
+  time: timeKey
+})
+//Xử lý lỗi khi ghi log
+  .then(() =>{
+  console.log("Log saved successfully.")})
+  .catch((error) => {
+  console.error("Logging failed:", error)})
+ 
+//Hiển thị thời gian mở
+    document.getElementById("firebase").innerText="unlocked at " + timeKey;
+  }
+
+
   // Gán nút "Đóng tủ"
-  document.getElementById("buttonDong").onclick= dongTu
-  function dongTu (){
+  function CLOSE(){
   set(statusRef, "closed");
+  set(ref(db, "unlock"),false);
+
+
    // Thời gian hiện tại
   const now = new Date();
   const timeKey = now.toLocaleTimeString('vi-VN').replace(",","_");
-  // Hiển thị thời gian + log khóa tủ
-  document.getElementById("firebase").innerText = "locked at " + timeKey;  
-  set(ref(db,"logs/"+timeKey),"admin locked")
+//Hoạt động đóng sau đăng nhập
+    if(!currentUser){
+        alert("Please log in to continue!");
+        return;
+    }
+//Hiển thị thời gian đóng
+    document.getElementById("firebase").innerText="locked at " + timeKey;
+set(ref(db, "logs"), {
+  user: currentUser.email,
+  time: timeKey
+})    
+.then(()=>{
+        console.log("Log saved successfully");
+        document.getElementById("Notification").innerText="Log saved successfully";
+        document.getElementById("Notification").style.color="green";
+    })
+    .catch((error)=>{
+        console.error("Log error:", error);
+        document.getElementById("Notification").innerText="Log error: " + error.message;
+        document.getElementById("Notification").style.color="red";
+    })
   //Xử lý lỗi khi ghi log
-  .then(() => console.log("Ghi log thành công"))
-  .catch((error) => console.error("Lỗi khi ghi log:", error));}
-  onValue(ref(db,"unlock"), (snapshot) =>{
-    const unlocked = snapshot.val();
-  // Cập nhật trạng thái unlock   
-  document.getElementById("unlock").innerText = snapshot.val();
-  if(unlocked === true){
-       console.log("Mở khóa tủ") // Mở khóa tủ
-  // Tự động reset khóa tủ sau 2 giây
-    setTimeout(function() {
-    set(ref(db, "unlock"),false);
-    console.log("Reset khóa tủ sau 2 giây");
-    }, 2000);
-    }
-    else{
-        console.log("Đã đóng khóa tủ")// Đóng khóa tủ
-    }
+  .then(() =>
+  console.log("Log saved successfully"))
+  .catch((error) =>
+  console.error("Logging failed:", error));
+};
+  document.getElementById("closebutton").onclick= CLOSE
+  document.getElementById("openbutton").onclick= OPEN
+  onValue(ref(db,"unlock"), (snapshot) => {
+  const unlocked = snapshot.val();
+  if (unlocked === true) {
+    console.log("Unlocked");
+  } else {
+    console.log("Locked");
+  }
 });
   </script>
   </body>
   </html>
+
+
+
